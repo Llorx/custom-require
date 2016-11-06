@@ -47,6 +47,16 @@ var secondWalker = new CustomRequire(function(module) {
 secondWalker.require("./test");
 ```
 
+Also, it works with asynchronous requires
+```js
+/* FILE: async_test.js */
+// Load any non-native module
+require("react");
+setTimeout(function() {
+    require("redux");
+}, 1000);
+```
+
 ## Limitations
 
 As the nature of Node.js, required modules are cached, so doing this will not work as expected:
