@@ -5,7 +5,7 @@
     "url": "http://llorxscript.blogspot.com.es"
   },
   "dependencies": {},
-  "description": "Run custom functions on any module and child dependencies",
+  "description": "Detect what dependencies a module has",
   "keywords": [
     "override",
     "require",

@@ -2,6 +2,7 @@ var Module = require("module");
 
 function CustomRequire(callback) {
     this.callback = callback;
+    this.called = [];
 }
 CustomRequire.prototype.require = function(path) {
     var requiredFilename = Module._resolveFilename(path, this, false);
@@ -20,16 +21,13 @@ Module.prototype.__addCustomRequire = function(customRequire) {
         this.__callChildRequires(customRequire);
     }
 }
-Module.prototype.__callChildRequires = function(customRequire, called) {
-    if (!called) {
-        called = [];
-    }
-    if (called.indexOf(this) < 0) {
-        called.push(this);
-        customRequire.callback(this.filename);
+Module.prototype.__callChildRequires = function(customRequire) {
+    if (customRequire.called.indexOf(this) < 0) {
+        customRequire.called.push(this);
+        customRequire.callback(this);
         for (var i = 0; i < this.__childModules.length; i++) {
             var childModule = this.__childModules[i];
-            childModule.__callChildRequires(customRequire, called);
+            childModule.__callChildRequires(customRequire);
         }
     }
 }
@@ -60,7 +58,7 @@ Module.prototype.require = function(path) {
     var requiredFilename = Module._resolveFilename(path, this, false);
     var res = this.__require(path);
     var cachedModule = Module._cache[requiredFilename];
-    if (this.__childModules.indexOf(cachedModule) < 0) {
+    if (cachedModule && this.__childModules.indexOf(cachedModule) < 0) {
         cachedModule.__initialize();
         this.__childModules.push(cachedModule);
         cachedModule.__parentModules.push(this);
