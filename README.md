@@ -42,7 +42,8 @@ var secondWalker = new CustomRequire(function(module) {
     console.log("Second walker", module.filename);
 });
 
-// Requiring modules already required by another instance will not be a problem. Second walker will receive all the dependencies too
+// Requiring modules already required by another instance will not be a problem
+// Second walker will receive all the dependencies too
 secondWalker.require("./test");
 ```
 
@@ -65,3 +66,5 @@ var walker = new CustomRequire(function(module) {
 walker.require("./test2");
 ```
 Custom Require will be only able to track modules loaded after it has been required for the first time, so is recommendable to require it at the top of the entry-point file. Is not needed to add it to each file. Only at the entry-point.
+
+NOTE: Custom Require will start tracking right after requiring it. Is not necessary to immediatly create an instance.
