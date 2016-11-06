@@ -2,6 +2,10 @@
 
 With this module you can receive a callback for any non-native dependecies an specific module loads, including the dependencies of his dependencies, and so on.
 
+## Installation
+
+`npm install custom-require`
+
 ## Usage
 
 ```js
