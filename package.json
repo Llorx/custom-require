@@ -10,8 +10,8 @@
     "override",
     "require",
     "module",
-	"custom",
-	"function"
+    "custom",
+    "function"
   ],
   "license": "MIT",
   "main": "./dist/CustomRequire.js",
@@ -20,5 +20,5 @@
     "type": "git",
     "url": "https://github.com/llorx/custom-require"
   },
-  "version": "0.0.1"
+  "version": "0.0.2"
 }
