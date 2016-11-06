@@ -1,0 +1,24 @@
+{
+  "author": {
+    "email": "dallorx@gmail.com",
+    "name": "Jorge Fuentes",
+    "url": "http://llorxscript.blogspot.com.es"
+  },
+  "dependencies": {},
+  "description": "Run custom functions on any module and child dependencies",
+  "keywords": [
+    "override",
+    "require",
+    "module",
+	"custom",
+	"function"
+  ],
+  "license": "MIT",
+  "main": "./dist/CustomRequire.js",
+  "name": "custom-require",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/llorx/custom-require"
+  },
+  "version": "0.1"
+}
