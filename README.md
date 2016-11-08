@@ -12,6 +12,8 @@ With this module you can receive a callback for any non-native dependecies an sp
 /* FILE: test1.js */
 // Load any non-native module
 require("react");
+
+module.exports = "yay";
 ```
 
 ```js
@@ -44,7 +46,11 @@ var secondWalker = new CustomRequire(function(module) {
 
 // Requiring modules already required by another instance will not be a problem
 // Second walker will receive all the dependencies too
-secondWalker.require("./test");
+// The require method will work as the default require one, returning the exports contents
+var yay = secondWalker.require("./test");
+
+// Yay it
+console.log(yay);
 ```
 
 Also, it works with asynchronous requires
