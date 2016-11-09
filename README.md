@@ -78,7 +78,7 @@ As the nature of Node.js, required modules are cached, so doing this will not wo
 require("./test");
 
 // Now load Custom Require
-var CustomRequire = require("custom-require");
+var CustomRequire = require("custom-require").CustomRequire;
 
 // And make an instance
 var walker = new CustomRequire(function(module) {
