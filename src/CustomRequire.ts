@@ -1,6 +1,6 @@
 var Module = require("module");
 
-class CustomRequire {
+export class CustomRequire {
     callback:(module:NodeModule)=>void;
     called:string[] = [];
     constructor(callback:(module:NodeModule)=>void) {
@@ -69,5 +69,3 @@ Module.prototype.require = function(path) {
     }
     return res;
 }
-
-export = CustomRequire;

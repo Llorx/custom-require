@@ -26,7 +26,10 @@ require("redux");
 ```js
 /* FILE: main.js */
 // Load the module at the top of the entry point file
-var CustomRequire = require("custom-require");
+var CustomRequire = require("custom-require").CustomRequire;
+
+// If you are using TypeScript, you can use import
+import { CustomRequire } from "cusrom-require";
 
 // Instantiate an object with a callback that will be called when a module is loaded
 var firstWalker = new CustomRequire(function(module) {
@@ -61,14 +64,6 @@ require("react");
 setTimeout(function() {
     require("redux");
 }, 1000);
-```
-
-## Typescript
-
-Because of Typescript limitations when exporting (See https://github.com/Microsoft/TypeScript/issues/2719), you need to use this syntax to import the library:
-```ts
-/* FILE: main.ts */
-import CustomRequire = require("custom-require");
 ```
 
 ## Limitations

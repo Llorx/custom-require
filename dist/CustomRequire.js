@@ -14,6 +14,7 @@ var CustomRequire = (function () {
     };
     return CustomRequire;
 }());
+exports.CustomRequire = CustomRequire;
 Module.prototype.__require = Module.prototype.require;
 Module.prototype.__addCustomRequire = function (customRequire) {
     if (this.__customRequires.indexOf(customRequire) < 0) {
@@ -68,5 +69,4 @@ Module.prototype.require = function (path) {
     }
     return res;
 };
-module.exports = CustomRequire;
 //# sourceMappingURL=CustomRequire.js.map
