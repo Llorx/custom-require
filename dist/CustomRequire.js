@@ -7,22 +7,24 @@ var CustomRequire = (function () {
         this.attachedModules = [];
         this.callback = callback;
     }
-    CustomRequire.prototype.require = function (id) {
+    CustomRequire.prototype.require = function (id, callerModule) {
         if (!this.callback) {
             throw new Error("Callback not defined");
         }
-        var callerModule = this.getCallerModule();
+        if (!callerModule) {
+            callerModule = this.getCallerModule();
+        }
         var requiredFilename = Module._resolveFilename(id, callerModule, false);
         var res = callerModule.require(id);
         var cachedModule = Module._cache[requiredFilename];
         cachedModule.__addCustomRequire(this);
         return res;
     };
-    CustomRequire.prototype.getCallerModule = function () {
+    CustomRequire.prototype.getCallerModule = function (filterlist) {
         var stack = callsite();
         for (var i in stack) {
             var filename = stack[i].getFileName();
-            if (filename !== module.filename) {
+            if (filename != module.filename && (!filterlist || filterlist.indexOf(filename) < 0)) {
                 var resolvedFile = Module._resolveFilename(filename, module, false);
                 return Module._cache[resolvedFile];
             }

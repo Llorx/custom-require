@@ -4,7 +4,7 @@ export declare class CustomRequire {
     called: string[];
     attachedModules: any[];
     constructor(callback: (module: NodeModule) => void);
-    require(id: string): any;
-    getCallerModule(): NodeModule;
+    require(id: string, callerModule?: NodeModule): any;
+    getCallerModule(filterlist?: string[]): NodeModule;
     dispose(): void;
 }

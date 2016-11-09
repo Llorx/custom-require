@@ -8,22 +8,24 @@ export class CustomRequire {
     constructor(callback:(module:NodeModule)=>void) {
         this.callback = callback;
     }
-    require(id:string) {
+    require(id:string, callerModule?:NodeModule) {
         if (!this.callback) {
             throw new Error("Callback not defined");
         }
-        var callerModule = this.getCallerModule();
+        if (!callerModule) {
+            callerModule = this.getCallerModule();
+        }
         var requiredFilename:string = Module._resolveFilename(id, callerModule, false);
         var res = callerModule.require(id);
         var cachedModule = Module._cache[requiredFilename];
         cachedModule.__addCustomRequire(this);
         return res;
     }
-    getCallerModule():NodeModule {
+    getCallerModule(filterlist?:string[]):NodeModule {
         var stack = callsite();
         for (var i in stack) {
             var filename = stack[i].getFileName();
-            if (filename !== module.filename) {
+            if (filename != module.filename && (!filterlist || filterlist.indexOf(filename) < 0)) {
                 var resolvedFile:string = Module._resolveFilename(filename, module, false);
                 return Module._cache[resolvedFile];
             }
