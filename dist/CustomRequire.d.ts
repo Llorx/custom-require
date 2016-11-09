@@ -4,4 +4,5 @@ export declare class CustomRequire {
     called: string[];
     constructor(callback: (module: NodeModule) => void);
     require(id: string): any;
+    getCallerModule(): NodeModule;
 }

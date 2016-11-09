@@ -1,4 +1,5 @@
 var Module = require("module");
+var callsite = require("callsite");
 
 export class CustomRequire {
     callback:(module:NodeModule)=>void;
@@ -7,11 +8,23 @@ export class CustomRequire {
         this.callback = callback;
     }
     require(id:string) {
-        var requiredFilename:string = Module._resolveFilename(id, module, false);
-        var res = require(id);
+        var callerModule = this.getCallerModule();
+        var requiredFilename:string = Module._resolveFilename(id, callerModule, false);
+        var res = callerModule.require(id);
         var cachedModule = Module._cache[requiredFilename];
         cachedModule.__addCustomRequire(this);
         return res;
+    }
+    getCallerModule():NodeModule {
+        var stack = callsite();
+        for (var i in stack) {
+            var filename = stack[i].getFileName();
+            if (filename !== module.filename) {
+                var resolvedFile:string = Module._resolveFilename(filename, module, false);
+                return Module._cache[resolvedFile];
+            }
+        }
+        throw new Error("Cannot find parent module");
     }
 }
 

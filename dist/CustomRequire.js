@@ -1,16 +1,29 @@
 "use strict";
 var Module = require("module");
+var callsite = require("callsite");
 var CustomRequire = (function () {
     function CustomRequire(callback) {
         this.called = [];
         this.callback = callback;
     }
     CustomRequire.prototype.require = function (id) {
-        var requiredFilename = Module._resolveFilename(id, module, false);
-        var res = require(id);
+        var callerModule = this.getCallerModule();
+        var requiredFilename = Module._resolveFilename(id, callerModule, false);
+        var res = callerModule.require(id);
         var cachedModule = Module._cache[requiredFilename];
         cachedModule.__addCustomRequire(this);
         return res;
+    };
+    CustomRequire.prototype.getCallerModule = function () {
+        var stack = callsite();
+        for (var i in stack) {
+            var filename = stack[i].getFileName();
+            if (filename !== module.filename) {
+                var resolvedFile = Module._resolveFilename(filename, module, false);
+                return Module._cache[resolvedFile];
+            }
+        }
+        throw new Error("Cannot find parent module");
     };
     return CustomRequire;
 }());
