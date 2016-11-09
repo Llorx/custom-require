@@ -24,7 +24,8 @@
     "function"
   ],
   "license": "MIT",
-  "main": "./dist/CustomRequire",
+  "main": "./dist/CustomRequire.js",
+  "types": "./dist/CustomRequire.d.ts",
   "name": "custom-require",
   "repository": {
     "type": "git",
