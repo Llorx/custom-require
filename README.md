@@ -2,6 +2,8 @@
 
 With this module you can receive a callback for any non-native dependecies an specific module loads, including the dependencies of his dependencies, and so on.
 
+To check for module and dependencies modifications, see https://github.com/Llorx/watcher-require
+
 ## Installation
 
 `npm install custom-require`
