@@ -63,6 +63,14 @@ setTimeout(function() {
 }, 1000);
 ```
 
+## Typescript
+
+Because of Typescript limitations when exporting (See https://github.com/Microsoft/TypeScript/issues/2719), you need to use this syntax to import the library:
+```ts
+/* FILE: main.ts */
+import CustomRequire = require("custom-require");
+```
+
 ## Limitations
 
 As the nature of Node.js, required modules are cached, so doing this will not work as expected:
