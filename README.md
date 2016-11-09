@@ -29,7 +29,7 @@ require("redux");
 var CustomRequire = require("custom-require").CustomRequire;
 
 // If you are using TypeScript, you can use import
-import { CustomRequire } from "cusrom-require";
+import { CustomRequire } from "custom-require";
 
 // Instantiate an object with a callback that will be called when a module is loaded
 var firstWalker = new CustomRequire(function(module) {
