@@ -4,7 +4,17 @@
     "name": "Jorge Fuentes",
     "url": "http://llorxscript.blogspot.com.es"
   },
-  "dependencies": {},
+  "files": [
+    "dist/",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run build-ts",
+    "build-ts": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^6.0.46"
+  },
   "description": "Detect what dependencies a module has",
   "keywords": [
     "override",
@@ -14,7 +24,7 @@
     "function"
   ],
   "license": "MIT",
-  "main": "./dist/CustomRequire.js",
+  "main": "./dist/CustomRequire",
   "name": "custom-require",
   "repository": {
     "type": "git",
