@@ -4,9 +4,13 @@ var callsite = require("callsite");
 var CustomRequire = (function () {
     function CustomRequire(callback) {
         this.called = [];
+        this.attachedModules = [];
         this.callback = callback;
     }
     CustomRequire.prototype.require = function (id) {
+        if (!this.callback) {
+            throw new Error("Callback not defined");
+        }
         var callerModule = this.getCallerModule();
         var requiredFilename = Module._resolveFilename(id, callerModule, false);
         var res = callerModule.require(id);
@@ -25,20 +29,32 @@ var CustomRequire = (function () {
         }
         throw new Error("Cannot find parent module");
     };
+    CustomRequire.prototype.dispose = function () {
+        for (var i = 0; i < this.attachedModules.length; i++) {
+            this.attachedModules[i].__removeCustomRequire(this);
+        }
+        this.callback = undefined;
+        this.called = [];
+        this.attachedModules = [];
+    };
     return CustomRequire;
 }());
 exports.CustomRequire = CustomRequire;
 Module.prototype.__require = Module.prototype.require;
+Module.prototype.__removeCustomRequire = function (customRequire) {
+    if (this.__customRequires.indexOf(customRequire) > -1) {
+        this.__customRequires.splice(this.__customRequires.indexOf(customRequire), 1);
+    }
+};
 Module.prototype.__addCustomRequire = function (customRequire) {
     if (this.__customRequires.indexOf(customRequire) < 0) {
         this.__customRequires.push(customRequire);
+        customRequire.attachedModules.push(this);
     }
-    if (customRequire.callback) {
-        this.__callChildRequires(customRequire);
-    }
+    this.__callChildRequires(customRequire);
 };
 Module.prototype.__callChildRequires = function (customRequire) {
-    if (customRequire.called.indexOf(this) < 0) {
+    if (customRequire.callback && customRequire.called.indexOf(this) < 0) {
         customRequire.called.push(this);
         customRequire.callback(this);
         for (var i = 0; i < this.__childModules.length; i++) {
@@ -48,11 +64,12 @@ Module.prototype.__callChildRequires = function (customRequire) {
     }
 };
 Module.prototype.__callRequires = function (mod) {
+    var calllist = [];
     for (var i = 0; i < this.__customRequires.length; i++) {
-        var customRequire = this.__customRequires[i];
-        if (customRequire.callback) {
-            mod.__callChildRequires(customRequire);
-        }
+        calllist.push(this.__customRequires[i]);
+    }
+    for (var i = 0; i < calllist.length; i++) {
+        mod.__callChildRequires(calllist[i]);
     }
 };
 Module.prototype.__initialize = function () {

@@ -4,10 +4,14 @@ var callsite = require("callsite");
 export class CustomRequire {
     callback:(module:NodeModule)=>void;
     called:string[] = [];
+    attachedModules:any[] = [];
     constructor(callback:(module:NodeModule)=>void) {
         this.callback = callback;
     }
     require(id:string) {
+        if (!this.callback) {
+            throw new Error("Callback not defined");
+        }
         var callerModule = this.getCallerModule();
         var requiredFilename:string = Module._resolveFilename(id, callerModule, false);
         var res = callerModule.require(id);
@@ -26,19 +30,31 @@ export class CustomRequire {
         }
         throw new Error("Cannot find parent module");
     }
+    dispose() {
+        for(var i = 0; i < this.attachedModules.length; i++) {
+            this.attachedModules[i].__removeCustomRequire(this);
+        }
+        this.callback = undefined;
+        this.called = [];
+        this.attachedModules = [];
+    }
 }
 
 Module.prototype.__require = Module.prototype.require;
-Module.prototype.__addCustomRequire = function(customRequire) {
-    if (this.__customRequires.indexOf(customRequire) < 0) {
-        this.__customRequires.push(customRequire);
-    }
-    if (customRequire.callback) {
-        this.__callChildRequires(customRequire);
+Module.prototype.__removeCustomRequire = function(customRequire:CustomRequire) {
+    if (this.__customRequires.indexOf(customRequire) > -1) {
+        this.__customRequires.splice(this.__customRequires.indexOf(customRequire), 1);
     }
 }
-Module.prototype.__callChildRequires = function(customRequire) {
-    if (customRequire.called.indexOf(this) < 0) {
+Module.prototype.__addCustomRequire = function(customRequire:CustomRequire) {
+    if (this.__customRequires.indexOf(customRequire) < 0) {
+        this.__customRequires.push(customRequire);
+        customRequire.attachedModules.push(this);
+    }
+    this.__callChildRequires(customRequire);
+}
+Module.prototype.__callChildRequires = function(customRequire:CustomRequire) {
+    if (customRequire.callback && customRequire.called.indexOf(this) < 0) {
         customRequire.called.push(this);
         customRequire.callback(this);
         for (var i = 0; i < this.__childModules.length; i++) {
@@ -48,11 +64,12 @@ Module.prototype.__callChildRequires = function(customRequire) {
     }
 }
 Module.prototype.__callRequires = function(mod) {
-    for (var i = 0; i < this.__customRequires.length; i++) {
-        var customRequire = this.__customRequires[i];
-        if (customRequire.callback) {
-            mod.__callChildRequires(customRequire);
-        }
+    var calllist = [];
+    for (let i = 0; i < this.__customRequires.length; i++) {
+        calllist.push(this.__customRequires[i]);
+    }
+    for (let i = 0; i < calllist.length; i++) {
+        mod.__callChildRequires(calllist[i]);
     }
 }
 Module.prototype.__initialize = function() {

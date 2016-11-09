@@ -54,6 +54,10 @@ var yay = secondWalker.require("./test");
 
 // Yay it
 console.log(yay);
+
+// After you have finished, call dispose() to clean resources attached to modules
+firstWalker.dispose();
+secondWalker.dispose();
 ```
 
 Also, it works with asynchronous requires
