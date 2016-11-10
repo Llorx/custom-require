@@ -32,14 +32,16 @@ export class CustomRequire {
         cachedModule.__addCustomRequire(this);
         return res;
     }
-    unrequire(id:string, callerModule?:CustomNodeModule, invalidateCache?:boolean) {
-        if (!callerModule) {
-            callerModule = this.getCallerModule();
+    unrequire(id:string|CustomNodeModule, callerModule?:CustomNodeModule, invalidateCache?:boolean) {
+        if (typeof id == "string") {
+            if (!callerModule) {
+                callerModule = this.getCallerModule();
+            }
+            id = this.getCachedModule(id, callerModule);
         }
-        var cachedModule = this.getCachedModule(id, callerModule);
-        var list = cachedModule.__removeCustomRequire(this);
+        var list = id.__removeCustomRequire(this);
         if (invalidateCache) {
-            cachedModule.__invalidateCache();
+            id.__invalidateCache();
         }
         if (this.unrequirecallback) {
             this.unrequirecallback(list);

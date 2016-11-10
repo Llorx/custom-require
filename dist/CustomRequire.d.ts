@@ -15,7 +15,7 @@ export declare class CustomRequire {
     attachedModules: CustomNodeModule[];
     constructor(requirecallback: (module: CustomNodeModule) => void, unrequirecallback?: (moduleList: CustomNodeModule[]) => void);
     require(id: string, callerModule?: CustomNodeModule): any;
-    unrequire(id: string, callerModule?: CustomNodeModule, invalidateCache?: boolean): CustomNodeModule[];
+    unrequire(id: string | CustomNodeModule, callerModule?: CustomNodeModule, invalidateCache?: boolean): CustomNodeModule[];
     getCachedModule(id: string, mod: NodeModule): CustomNodeModule;
     getCallerModule(filterlist?: string[]): CustomNodeModule;
     dispose(): void;

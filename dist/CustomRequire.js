@@ -21,13 +21,15 @@ var CustomRequire = (function () {
         return res;
     };
     CustomRequire.prototype.unrequire = function (id, callerModule, invalidateCache) {
-        if (!callerModule) {
-            callerModule = this.getCallerModule();
+        if (typeof id == "string") {
+            if (!callerModule) {
+                callerModule = this.getCallerModule();
+            }
+            id = this.getCachedModule(id, callerModule);
         }
-        var cachedModule = this.getCachedModule(id, callerModule);
-        var list = cachedModule.__removeCustomRequire(this);
+        var list = id.__removeCustomRequire(this);
         if (invalidateCache) {
-            cachedModule.__invalidateCache();
+            id.__invalidateCache();
         }
         if (this.unrequirecallback) {
             this.unrequirecallback(list);
