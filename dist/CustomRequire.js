@@ -56,31 +56,35 @@ var CustomRequire = (function () {
 }());
 exports.CustomRequire = CustomRequire;
 Module.prototype.__require = Module.prototype.require;
-Module.prototype.__cleanCalled = function (customRequire) {
+Module.prototype.__cleanCalled = function (customRequire, mod) {
     var whoRequired = this.__whoRequired();
-    var found = false;
+    var clean = true;
     for (var _i = 0, whoRequired_1 = whoRequired; _i < whoRequired_1.length; _i++) {
         var req = whoRequired_1[_i];
+        if (req != mod) {
+            clean = false;
+            break;
+        }
         for (var _a = 0, _b = req.__customRequires; _a < _b.length; _a++) {
             var cRequire = _b[_a];
-            if (cRequire == customRequire) {
-                found = true;
+            if (cRequire != customRequire) {
+                clean = false;
                 break;
             }
         }
     }
-    if (!found && customRequire.called.indexOf(this) > -1) {
+    if (clean && customRequire.called.indexOf(this) > -1) {
         customRequire.called.splice(customRequire.called.indexOf(this), 1);
     }
     for (var _c = 0, _d = this.__childModules; _c < _d.length; _c++) {
         var childModule = _d[_c];
-        childModule.__cleanCalled(customRequire);
+        childModule.__cleanCalled(customRequire, mod);
     }
 };
 Module.prototype.__removeCustomRequire = function (customRequire) {
     if (this.__customRequires.indexOf(customRequire) > -1) {
         this.__customRequires.splice(this.__customRequires.indexOf(customRequire), 1);
-        this.__cleanCalled(customRequire);
+        this.__cleanCalled(customRequire, this);
     }
 };
 Module.prototype.__addCustomRequire = function (customRequire) {

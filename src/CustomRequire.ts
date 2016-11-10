@@ -65,28 +65,32 @@ export class CustomRequire {
 }
 
 Module.prototype.__require = Module.prototype.require;
-Module.prototype.__cleanCalled = function(customRequire:CustomRequire) {
+Module.prototype.__cleanCalled = function(customRequire:CustomRequire, mod:CustomNodeModule) {
     var whoRequired = this.__whoRequired();
-    var found = false;
+    var clean = true;
     for (let req of whoRequired) {
+        if (req != mod) {
+            clean = false;
+            break;
+        }
         for (let cRequire of req.__customRequires) {
-            if (cRequire == customRequire) {
-                found = true;
+            if (cRequire != customRequire) {
+                clean = false;
                 break;
             }
         }
     }
-    if (!found && customRequire.called.indexOf(this) > -1) {
+    if (clean && customRequire.called.indexOf(this) > -1) {
         customRequire.called.splice(customRequire.called.indexOf(this), 1);
     }
     for (let childModule of this.__childModules) {
-        childModule.__cleanCalled(customRequire);
+        childModule.__cleanCalled(customRequire, mod);
     }
 }
 Module.prototype.__removeCustomRequire = function(customRequire:CustomRequire) {
     if (this.__customRequires.indexOf(customRequire) > -1) {
         this.__customRequires.splice(this.__customRequires.indexOf(customRequire), 1);
-        this.__cleanCalled(customRequire);
+        this.__cleanCalled(customRequire, this);
     }
 }
 Module.prototype.__addCustomRequire = function(customRequire:CustomRequire) {
