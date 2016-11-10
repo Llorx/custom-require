@@ -24,10 +24,11 @@ var CustomRequire = (function () {
             callerModule = this.getCallerModule();
         }
         var cachedModule = this.getCachedModule(id, callerModule);
-        cachedModule.__removeCustomRequire(this);
+        var list = cachedModule.__removeCustomRequire(this);
         if (invalidateCache) {
             cachedModule.__invalidateCache();
         }
+        return list;
     };
     CustomRequire.prototype.getCachedModule = function (id, mod) {
         var resolvedFile = Module._resolveFilename(id, mod, false);
@@ -57,6 +58,7 @@ var CustomRequire = (function () {
 exports.CustomRequire = CustomRequire;
 Module.prototype.__require = Module.prototype.require;
 Module.prototype.__cleanCalled = function (customRequire, mod) {
+    var list = [];
     var whoRequired = this.__whoRequired();
     var clean = true;
     for (var _i = 0, whoRequired_1 = whoRequired; _i < whoRequired_1.length; _i++) {
@@ -75,17 +77,21 @@ Module.prototype.__cleanCalled = function (customRequire, mod) {
     }
     if (clean && customRequire.called.indexOf(this) > -1) {
         customRequire.called.splice(customRequire.called.indexOf(this), 1);
+        list.push(this);
     }
     for (var _c = 0, _d = this.__childModules; _c < _d.length; _c++) {
         var childModule = _d[_c];
-        childModule.__cleanCalled(customRequire, mod);
+        list = list.concat(childModule.__cleanCalled(customRequire, mod));
     }
+    return list;
 };
 Module.prototype.__removeCustomRequire = function (customRequire) {
+    var list = [];
     if (this.__customRequires.indexOf(customRequire) > -1) {
         this.__customRequires.splice(this.__customRequires.indexOf(customRequire), 1);
-        this.__cleanCalled(customRequire, this);
+        list = this.__cleanCalled(customRequire, this);
     }
+    return list;
 };
 Module.prototype.__addCustomRequire = function (customRequire) {
     if (this.__customRequires.indexOf(customRequire) < 0) {
