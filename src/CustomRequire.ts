@@ -8,7 +8,7 @@ export interface CustomNodeModule extends NodeModule {
     __removeCustomRequire:(customRequire:CustomRequire)=>CustomNodeModule[];
     __addCustomRequire:(customRequire:CustomRequire)=>void;
     __invalidateCache:()=>void;
-    __getRequired:()=>CustomNodeModule[];
+    __whoRequired:()=>CustomNodeModule[];
 }
 
 export class CustomRequire {

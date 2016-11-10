@@ -6,7 +6,7 @@ export interface CustomNodeModule extends NodeModule {
     __removeCustomRequire: (customRequire: CustomRequire) => CustomNodeModule[];
     __addCustomRequire: (customRequire: CustomRequire) => void;
     __invalidateCache: () => void;
-    __getRequired: () => CustomNodeModule[];
+    __whoRequired: () => CustomNodeModule[];
 }
 export declare class CustomRequire {
     callback: (module: CustomNodeModule) => void;
