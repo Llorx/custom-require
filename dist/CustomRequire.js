@@ -15,8 +15,12 @@ var CustomRequire = (function () {
         if (!callerModule) {
             callerModule = this.getCallerModule();
         }
-        var res = callerModule.require(id);
         var cachedModule = this.getCachedModule(id, callerModule);
+        if (cachedModule && cachedModule.__checkInvalid()) {
+            this.unrequire(cachedModule, undefined, true);
+        }
+        var res = callerModule.require(id);
+        cachedModule = this.getCachedModule(id, callerModule);
         cachedModule.__addCustomRequire(this);
         return res;
     };
@@ -62,7 +66,16 @@ var CustomRequire = (function () {
     return CustomRequire;
 }());
 exports.CustomRequire = CustomRequire;
+Module.__customCache = {};
 Module.prototype.__require = Module.prototype.require;
+Module.prototype.__getChildModules = function () {
+    var list = [];
+    for (var _i = 0, _a = this.__childModules; _i < _a.length; _i++) {
+        var childModule = _a[_i];
+        list = list.concat(childModule.__getChildModules());
+    }
+    return list;
+};
 Module.prototype.__cleanCalled = function (customRequire, mod) {
     var list = [];
     var whoRequired = this.__whoRequired();
@@ -95,6 +108,7 @@ Module.prototype.__removeCustomRequire = function (customRequire) {
     var list = [];
     if (this.__customRequires.indexOf(customRequire) > -1) {
         this.__customRequires.splice(this.__customRequires.indexOf(customRequire), 1);
+        customRequire.attachedModules.splice(customRequire.attachedModules.indexOf(this), 1);
         list = this.__cleanCalled(customRequire, this);
     }
     return list;
@@ -133,8 +147,20 @@ Module.prototype.__whoRequired = function (cyclicCheck) {
     }
     return whoRequired;
 };
+Module.prototype.__checkInvalid = function () {
+    if (this.__invalid) {
+        return true;
+    }
+    for (var _i = 0, _a = this.__childModules; _i < _a.length; _i++) {
+        var childModule = _a[_i];
+        if (childModule.__checkInvalid()) {
+            return true;
+        }
+    }
+    return false;
+};
 Module.prototype.__invalidateCache = function () {
-    delete Module._cache[this.filename];
+    this.__invalid = true;
     for (var _i = 0, _a = this.__childModules; _i < _a.length; _i++) {
         var childModule = _a[_i];
         childModule.__invalidateCache();
@@ -166,10 +192,36 @@ Module.prototype.__callParentRequires = function (mod) {
     }
 };
 Module.prototype.require = function (path) {
+    var _this = this;
     this.__initialize();
-    var res = this.__require(path);
     var requiredFilename = Module._resolveFilename(path, this, false);
+    var customCache = Module.__customCache[requiredFilename];
     var cachedModule = Module._cache[requiredFilename];
+    if (cachedModule && cachedModule.__invalid) {
+        delete Module._cache[requiredFilename];
+    }
+    var res;
+    (function () {
+        try {
+            res = _this.__require(path);
+        }
+        catch (e) {
+            if (!customCache) {
+                throw e;
+            }
+            res = customCache.exports;
+            Module._cache[requiredFilename] = customCache;
+        }
+    })();
+    if (!cachedModule || cachedModule.__invalid) {
+        cachedModule = Module._cache[requiredFilename];
+    }
+    if (cachedModule && !cachedModule.__invalid) {
+        Module.__customCache[requiredFilename] = cachedModule;
+    }
+    else {
+        cachedModule = customCache;
+    }
     if (cachedModule && this.__childModules.indexOf(cachedModule) < 0) {
         for (var i = 0; i < this.__childModules.length; i++) {
             var mod = this.__childModules[i];
