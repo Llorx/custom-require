@@ -10,9 +10,10 @@ export interface CustomNodeModule extends NodeModule {
 }
 export declare class CustomRequire {
     callback: (module: CustomNodeModule) => void;
+    unrequirecallback: (moduleList: CustomNodeModule[]) => void;
     called: string[];
     attachedModules: CustomNodeModule[];
-    constructor(callback: (module: CustomNodeModule) => void);
+    constructor(requirecallback: (module: CustomNodeModule) => void, unrequirecallback?: (moduleList: CustomNodeModule[]) => void);
     require(id: string, callerModule?: CustomNodeModule): any;
     unrequire(id: string, callerModule?: CustomNodeModule, invalidateCache?: boolean): CustomNodeModule[];
     getCachedModule(id: string, mod: NodeModule): CustomNodeModule;

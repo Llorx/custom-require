@@ -2,10 +2,11 @@
 var Module = require("module");
 var callsite = require("callsite");
 var CustomRequire = (function () {
-    function CustomRequire(callback) {
+    function CustomRequire(requirecallback, unrequirecallback) {
         this.called = [];
         this.attachedModules = [];
-        this.callback = callback;
+        this.callback = requirecallback;
+        this.unrequirecallback = unrequirecallback;
     }
     CustomRequire.prototype.require = function (id, callerModule) {
         if (!this.callback) {
@@ -27,6 +28,9 @@ var CustomRequire = (function () {
         var list = cachedModule.__removeCustomRequire(this);
         if (invalidateCache) {
             cachedModule.__invalidateCache();
+        }
+        if (this.unrequirecallback) {
+            this.unrequirecallback(list);
         }
         return list;
     };

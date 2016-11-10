@@ -13,10 +13,12 @@ export interface CustomNodeModule extends NodeModule {
 
 export class CustomRequire {
     callback:(module:CustomNodeModule)=>void;
+    unrequirecallback:(moduleList:CustomNodeModule[])=>void;
     called:string[] = [];
     attachedModules:CustomNodeModule[] = [];
-    constructor(callback:(module:CustomNodeModule)=>void) {
-        this.callback = callback;
+    constructor(requirecallback:(module:CustomNodeModule)=>void, unrequirecallback?:(moduleList:CustomNodeModule[])=>void) {
+        this.callback = requirecallback;
+        this.unrequirecallback = unrequirecallback;
     }
     require(id:string, callerModule?:CustomNodeModule) {
         if (!this.callback) {
@@ -38,6 +40,9 @@ export class CustomRequire {
         var list = cachedModule.__removeCustomRequire(this);
         if (invalidateCache) {
             cachedModule.__invalidateCache();
+        }
+        if (this.unrequirecallback) {
+            this.unrequirecallback(list);
         }
         return list;
     }
