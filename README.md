@@ -1,6 +1,6 @@
 # Custom Require
 
-[![npm](https://img.shields.io/npm/v/npm.svg)]([![npm](https://img.shields.io/npm/dm/localeval.svg)](https://www.npmjs.com/package/custom-require)) [![npm](https://img.shields.io/npm/dm/localeval.svg)](https://www.npmjs.com/package/custom-require)
+[![npm](https://img.shields.io/npm/v/custom-require.svg)](https://www.npmjs.com/package/custom-require) [![npm](https://img.shields.io/npm/dm/custom-require.svg)](https://www.npmjs.com/package/custom-require)
 
 With this module you can receive a callback for any non-native dependecies an specific module loads, including the dependencies of his dependencies, and so on.
 
