@@ -1,5 +1,7 @@
 # Custom Require
 
+[![npm](https://img.shields.io/npm/v/npm.svg)]([![npm](https://img.shields.io/npm/dm/localeval.svg)](https://www.npmjs.com/package/custom-require)) [![npm](https://img.shields.io/npm/dm/localeval.svg)](https://www.npmjs.com/package/custom-require)
+
 With this module you can receive a callback for any non-native dependecies an specific module loads, including the dependencies of his dependencies, and so on.
 
 To check for module and dependencies modifications, see https://github.com/Llorx/watcher-require
@@ -94,4 +96,4 @@ walker.require("./test2");
 ```
 Custom Require will be only able to track modules loaded after it has been required for the first time, so is recommendable to require it at the top of the entry-point file. Is not needed to add it to each file. Only at the entry-point.
 
-NOTE: Custom Require will start tracking right after requiring it. Is not necessary to immediatly create an instance.
+NOTE: Custom Require will start tracking right after requiring it. Is not necessary to immediately create an instance.
