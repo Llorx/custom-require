@@ -4,6 +4,8 @@ With this module you can receive a callback for any non-native dependecies an sp
 
 To check for module and dependencies modifications, see https://github.com/Llorx/watcher-require
 
+To always receive an updated version of your modules, checking files and dependencies modifications,see https://github.com/Llorx/updated-require
+
 ## Installation
 
 `npm install custom-require`
