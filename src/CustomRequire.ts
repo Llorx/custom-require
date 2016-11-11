@@ -155,6 +155,9 @@ Module.prototype.__whoRequired = function(cyclicCheck?:CustomNodeModule[]) {
     return whoRequired;
 }
 Module.prototype.__checkInvalid = function() {
+    if (!this.__childModules) {
+        return;
+    }
     if (this.__invalid) {
         return true;
     }
@@ -198,28 +201,37 @@ Module.prototype.require = function(path) {
     var requiredFilename = Module._resolveFilename(path, this, false);
     var customCache = Module.__customCache[requiredFilename];
     var cachedModule = Module._cache[requiredFilename];
-    if (cachedModule && cachedModule.__invalid) {
+    if (cachedModule && cachedModule.__checkInvalid()) {
+        cachedModule = null;
         delete Module._cache[requiredFilename];
     }
     var res;
+    var error:any;
     (() => { // Try/catch inside function so V8 optimizes better
         try {
             res = this.__require(path);
         } catch (e) {
+            error = e;
             if (!customCache) {
                 throw e;
             }
-            res = customCache.exports;
-            Module._cache[requiredFilename] = customCache;
         }
     })();
-    if (!cachedModule || cachedModule.__invalid) {
+    if (!cachedModule) {
         cachedModule = Module._cache[requiredFilename];
     }
-    if (cachedModule && !cachedModule.__invalid) {
-        Module.__customCache[requiredFilename] = cachedModule;
+    if (error || !cachedModule || cachedModule.__checkInvalid()) {
+        if (!customCache) {
+            if (error) {
+                throw error;
+            }
+        } else {
+            res = customCache.exports;
+            cachedModule = customCache;
+            Module._cache[requiredFilename] = customCache;
+        }
     } else {
-        cachedModule = customCache;
+        Module.__customCache[requiredFilename] = cachedModule;
     }
     if (cachedModule && this.__childModules.indexOf(cachedModule) < 0) {
         for (var i = 0; i < this.__childModules.length; i++) {
