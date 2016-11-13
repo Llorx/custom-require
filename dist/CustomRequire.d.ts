@@ -7,7 +7,7 @@ export interface CustomNodeModule extends NodeModule {
     __addCustomRequire: (customRequire: CustomRequire) => void;
     __invalidateCache: () => void;
     __checkInvalid: () => boolean;
-    __whoRequired: () => CustomNodeModule[];
+    __whoRequired: (firstOnly?: boolean) => CustomNodeModule[];
     __getChildModules: () => CustomNodeModule[];
     __invalid: boolean;
 }
