@@ -32,7 +32,7 @@ export class CustomRequire {
         }
         var cachedModule = this.getCachedModule(id, callerModule);
         if (cachedModule && cachedModule.__checkInvalid()) {
-            this.unrequire(cachedModule, undefined, true);
+            this.unrequire(cachedModule, null, true);
         }
         var res = callerModule.require(id);
         cachedModule = this.getCachedModule(id, callerModule);
@@ -73,7 +73,7 @@ export class CustomRequire {
         for(let mod of this.attachedModules) {
             mod.__removeCustomRequire(this);
         }
-        this.callback = undefined;
+        this.callback = null;
         this.called = [];
         this.attachedModules = [];
     }
@@ -138,7 +138,7 @@ Module.prototype.__callChildRequires = function(customRequire:CustomRequire) {
         }
     }
 }
-Module.prototype.__whoRequired = function(cyclicCheck?:CustomNodeModule[]) {
+Module.prototype.__whoRequired = function(firstOnly?:boolean, cyclicCheck?:CustomNodeModule[]) {
     if (!cyclicCheck) {
         cyclicCheck = [];
     }
@@ -146,10 +146,13 @@ Module.prototype.__whoRequired = function(cyclicCheck?:CustomNodeModule[]) {
     var whoRequired:CustomNodeModule[] = [];
     if (this.__customRequires.length > 0) {
         whoRequired.push(this);
+        if (firstOnly) {
+            return whoRequired;
+        }
     }
     for (let parentModule of this.__parentModules) {
         if (cyclicCheck.indexOf(parentModule) < 0) {
-            whoRequired = whoRequired.concat(parentModule.__whoRequired(cyclicCheck));
+            whoRequired = whoRequired.concat(parentModule.__whoRequired(firstOnly, cyclicCheck));
         }
     }
     return whoRequired;
