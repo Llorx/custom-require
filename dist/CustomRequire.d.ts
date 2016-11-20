@@ -1,25 +1,27 @@
 /// <reference types="node" />
-export interface CustomNodeModule extends NodeModule {
-    __childModules: CustomNodeModule[];
-    __customRequires: CustomRequire[];
-    __parentModules: CustomNodeModule[];
-    __removeCustomRequire: (customRequire: CustomRequire) => CustomNodeModule[];
-    __addCustomRequire: (customRequire: CustomRequire) => void;
-    __invalidateCache: () => void;
-    __checkInvalid: () => boolean;
-    __whoRequired: (firstOnly?: boolean) => CustomNodeModule[];
-    __getChildModules: () => CustomNodeModule[];
-    __invalid: boolean;
+declare global  {
+    interface NodeModule {
+        __childModules: NodeModule[];
+        __customRequires: CustomRequire[];
+        __parentModules: NodeModule[];
+        __removeCustomRequire: (customRequire: CustomRequire) => NodeModule[];
+        __addCustomRequire: (customRequire: CustomRequire) => void;
+        __invalidateCache: () => void;
+        __checkInvalid: () => boolean;
+        __whoRequired: () => NodeModule[];
+        __invalid: boolean;
+    }
 }
 export declare class CustomRequire {
-    callback: (module: CustomNodeModule) => void;
-    unrequirecallback: (moduleList: CustomNodeModule[]) => void;
+    callback: (module: NodeModule) => void;
+    unrequirecallback: (moduleList: NodeModule[]) => void;
     called: string[];
-    attachedModules: CustomNodeModule[];
-    constructor(requirecallback: (module: CustomNodeModule) => void, unrequirecallback?: (moduleList: CustomNodeModule[]) => void);
-    require(id: string, callerModule?: CustomNodeModule): any;
-    unrequire(id: string | CustomNodeModule, callerModule?: CustomNodeModule, invalidateCache?: boolean): CustomNodeModule[];
-    getCachedModule(id: string, mod: NodeModule): CustomNodeModule;
-    getCallerModule(filterlist?: string[]): CustomNodeModule;
+    attachedModules: NodeModule[];
+    constructor(requirecallback: (module: NodeModule) => void, unrequirecallback?: (moduleList: NodeModule[]) => void);
+    require(id: string, callerModule?: NodeModule): any;
+    unrequire(id: string | NodeModule, callerModule?: NodeModule, invalidateCache?: boolean): NodeModule[];
+    getCachedModule(id: string, mod: NodeModule): NodeModule;
+    getCallerModule(filterlist?: string[]): NodeModule;
     dispose(): void;
 }
+export {};

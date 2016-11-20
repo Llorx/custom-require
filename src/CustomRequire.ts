@@ -1,29 +1,30 @@
 var Module = require("module");
 var callsite = require("callsite");
 
-export interface CustomNodeModule extends NodeModule {
-    __childModules:CustomNodeModule[];
-    __customRequires:CustomRequire[];
-    __parentModules:CustomNodeModule[];
-    __removeCustomRequire:(customRequire:CustomRequire)=>CustomNodeModule[];
-    __addCustomRequire:(customRequire:CustomRequire)=>void;
-    __invalidateCache:()=>void;
-    __checkInvalid:()=>boolean;
-    __whoRequired:(firstOnly?:boolean)=>CustomNodeModule[];
-    __getChildModules:()=>CustomNodeModule[];
-    __invalid:boolean;
+declare global {
+    interface NodeModule {
+        __childModules:NodeModule[];
+        __customRequires:CustomRequire[];
+        __parentModules:NodeModule[];
+        __removeCustomRequire:(customRequire:CustomRequire)=>NodeModule[];
+        __addCustomRequire:(customRequire:CustomRequire)=>void;
+        __invalidateCache:()=>void;
+        __checkInvalid:()=>boolean;
+        __whoRequired:()=>NodeModule[];
+        __invalid:boolean;
+    }
 }
 
 export class CustomRequire {
-    callback:(module:CustomNodeModule)=>void;
-    unrequirecallback:(moduleList:CustomNodeModule[])=>void;
+    callback:(module:NodeModule)=>void;
+    unrequirecallback:(moduleList:NodeModule[])=>void;
     called:string[] = [];
-    attachedModules:CustomNodeModule[] = [];
-    constructor(requirecallback:(module:CustomNodeModule)=>void, unrequirecallback?:(moduleList:CustomNodeModule[])=>void) {
+    attachedModules:NodeModule[] = [];
+    constructor(requirecallback:(module:NodeModule)=>void, unrequirecallback?:(moduleList:NodeModule[])=>void) {
         this.callback = requirecallback;
         this.unrequirecallback = unrequirecallback;
     }
-    require(id:string, callerModule?:CustomNodeModule) {
+    require(id:string, callerModule?:NodeModule) {
         if (!this.callback) {
             throw new Error("Callback not defined");
         }
@@ -39,27 +40,29 @@ export class CustomRequire {
         cachedModule.__addCustomRequire(this);
         return res;
     }
-    unrequire(id:string|CustomNodeModule, callerModule?:CustomNodeModule, invalidateCache?:boolean) {
+    unrequire(id:string|NodeModule, callerModule?:NodeModule, invalidateCache?:boolean) {
         if (typeof id == "string") {
             if (!callerModule) {
                 callerModule = this.getCallerModule();
             }
             id = this.getCachedModule(id, callerModule);
         }
-        var list = id.__removeCustomRequire(this);
-        if (invalidateCache) {
-            id.__invalidateCache();
-        }
-        if (this.unrequirecallback) {
-            this.unrequirecallback(list);
+        if (this.attachedModules.indexOf(id) > -1) {
+            var list = id.__removeCustomRequire(this);
+            if (invalidateCache) {
+                id.__invalidateCache();
+            }
+            if (this.unrequirecallback) {
+                this.unrequirecallback(list);
+            }
         }
         return list;
     }
-    getCachedModule(id:string, mod:NodeModule):CustomNodeModule {
+    getCachedModule(id:string, mod:NodeModule):NodeModule {
         var resolvedFile:string = Module._resolveFilename(id, mod, false);
         return Module._cache[resolvedFile];
     }
-    getCallerModule(filterlist?:string[]):CustomNodeModule {
+    getCallerModule(filterlist?:string[]):NodeModule {
         var stack = callsite();
         for (var i in stack) {
             var filename = stack[i].getFileName();
@@ -81,15 +84,12 @@ export class CustomRequire {
 
 Module.__customCache = {};
 Module.prototype.__require = Module.prototype.require;
-Module.prototype.__getChildModules = function() {
-    var list = [];
-    for (let childModule of this.__childModules) {
-        list = list.concat(childModule.__getChildModules());
+Module.prototype.__cleanCalled = function(customRequire:CustomRequire, mod:NodeModule, cyclicCheck?:NodeModule[]) {
+    if (!cyclicCheck) {
+        cyclicCheck = [];
     }
-    return list;
-}
-Module.prototype.__cleanCalled = function(customRequire:CustomRequire, mod:CustomNodeModule) {
-    var list:CustomNodeModule[] = [];
+    cyclicCheck.push(this);
+    var list:NodeModule[] = [];
     var whoRequired = this.__whoRequired();
     var clean = true;
     for (let req of whoRequired) {
@@ -109,12 +109,14 @@ Module.prototype.__cleanCalled = function(customRequire:CustomRequire, mod:Custo
         list.push(this);
     }
     for (let childModule of this.__childModules) {
-        list = list.concat(childModule.__cleanCalled(customRequire, mod));
+        if (cyclicCheck.indexOf(childModule) < 0) {
+            list = list.concat(childModule.__cleanCalled(customRequire, mod, cyclicCheck));
+        }
     }
     return list;
 }
 Module.prototype.__removeCustomRequire = function(customRequire:CustomRequire) {
-    var list:CustomNodeModule[] = [];
+    var list:NodeModule[] = [];
     if (this.__customRequires.indexOf(customRequire) > -1) {
         this.__customRequires.splice(this.__customRequires.indexOf(customRequire), 1);
         customRequire.attachedModules.splice(customRequire.attachedModules.indexOf(this), 1);
@@ -130,6 +132,9 @@ Module.prototype.__addCustomRequire = function(customRequire:CustomRequire) {
     this.__callChildRequires(customRequire);
 }
 Module.prototype.__callChildRequires = function(customRequire:CustomRequire) {
+    if (this.__customRequires.length > 0 && this.__customRequires.indexOf(customRequire) < 0) {
+        return;
+    }
     if (customRequire.callback && customRequire.called.indexOf(this) < 0) {
         customRequire.called.push(this);
         customRequire.callback(this);
@@ -138,43 +143,58 @@ Module.prototype.__callChildRequires = function(customRequire:CustomRequire) {
         }
     }
 }
-Module.prototype.__whoRequired = function(firstOnly?:boolean, cyclicCheck?:CustomNodeModule[]) {
+Module.prototype.__whoRequired = function(cyclicCheck?:NodeModule[]) {
     if (!cyclicCheck) {
         cyclicCheck = [];
     }
     cyclicCheck.push(this);
-    var whoRequired:CustomNodeModule[] = [];
+    var whoRequired:NodeModule[] = [];
     if (this.__customRequires.length > 0) {
         whoRequired.push(this);
-        if (firstOnly) {
-            return whoRequired;
-        }
-    }
-    for (let parentModule of this.__parentModules) {
-        if (cyclicCheck.indexOf(parentModule) < 0) {
-            whoRequired = whoRequired.concat(parentModule.__whoRequired(firstOnly, cyclicCheck));
+    } else {
+        for (let parentModule of this.__parentModules) {
+            if (cyclicCheck.indexOf(parentModule) < 0) {
+                whoRequired = whoRequired.concat(parentModule.__whoRequired(cyclicCheck));
+            }
         }
     }
     return whoRequired;
 }
-Module.prototype.__checkInvalid = function() {
+Module.prototype.__checkInvalid = function(cyclicCheck?:NodeModule[]) {
+    if (!cyclicCheck) {
+        cyclicCheck = [];
+    } else if (this.__customRequires.length > 0) {
+        return;
+    }
+    cyclicCheck.push(this);
     if (!this.__childModules) {
         return;
     }
     if (this.__invalid) {
         return true;
     }
+    this.__invalid = true;
     for (let childModule of this.__childModules) {
-        if (childModule.__checkInvalid()) {
-            return true;
+        if (cyclicCheck.indexOf(childModule) < 0) {
+            if (childModule.__checkInvalid(cyclicCheck)) {
+                return true;
+            }
         }
     }
     return false;
 }
-Module.prototype.__invalidateCache = function() {
+Module.prototype.__invalidateCache = function(cyclicCheck?:NodeModule[]) {
     this.__invalid = true;
-    for (let childModule of this.__childModules) {
-        childModule.__invalidateCache();
+    if (!cyclicCheck) {
+        cyclicCheck = [];
+    }
+    cyclicCheck.push(this);
+    if (this.__customRequires.length == 0) {
+        for (let childModule of this.__childModules) {
+            if (cyclicCheck.indexOf(childModule) < 0) {
+                childModule.__invalidateCache(cyclicCheck);
+            }
+        }
     }
 }
 Module.prototype.__callRequires = function(mod) {
@@ -193,10 +213,16 @@ Module.prototype.__initialize = function() {
         this.__parentModules = [];
     }
 }
-Module.prototype.__callParentRequires = function(mod) {
+Module.prototype.__callParentRequires = function(mod, cyclicCheck?:NodeModule[]) {
     this.__callRequires(mod);
+    if (!cyclicCheck) {
+        cyclicCheck = [];
+    } else if (this.__customRequires.length > 0) {
+        return;
+    }
+    cyclicCheck.push(this);
     for (let parentModule of this.__parentModules) {
-        parentModule.__callParentRequires(mod);
+        parentModule.__callParentRequires(mod, cyclicCheck);
     }
 }
 Module.prototype.require = function(path) {
