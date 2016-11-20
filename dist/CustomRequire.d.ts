@@ -7,6 +7,7 @@ declare global  {
         __removeCustomRequire: (customRequire: CustomRequire) => NodeModule[];
         __addCustomRequire: (customRequire: CustomRequire) => void;
         __invalidateCache: () => void;
+        __invalidate: () => NodeModule[];
         __checkInvalid: () => boolean;
         __whoRequired: () => NodeModule[];
         __invalid: boolean;
@@ -19,7 +20,7 @@ export declare class CustomRequire {
     attachedModules: NodeModule[];
     constructor(requirecallback: (module: NodeModule) => void, unrequirecallback?: (moduleList: NodeModule[]) => void);
     require(id: string, callerModule?: NodeModule): any;
-    unrequire(id: string | NodeModule, callerModule?: NodeModule, invalidateCache?: boolean): NodeModule[];
+    unrequire(id: string | NodeModule, callerModule?: NodeModule): NodeModule[];
     getCachedModule(id: string, mod: NodeModule): NodeModule;
     getCallerModule(filterlist?: string[]): NodeModule;
     dispose(): void;

@@ -9,6 +9,7 @@ declare global {
         __removeCustomRequire:(customRequire:CustomRequire)=>NodeModule[];
         __addCustomRequire:(customRequire:CustomRequire)=>void;
         __invalidateCache:()=>void;
+        __invalidate:()=>NodeModule[];
         __checkInvalid:()=>boolean;
         __whoRequired:()=>NodeModule[];
         __invalid:boolean;
@@ -33,14 +34,14 @@ export class CustomRequire {
         }
         var cachedModule = this.getCachedModule(id, callerModule);
         if (cachedModule && cachedModule.__checkInvalid()) {
-            this.unrequire(cachedModule, null, true);
+            cachedModule.__invalidate();
         }
         var res = callerModule.require(id);
         cachedModule = this.getCachedModule(id, callerModule);
         cachedModule.__addCustomRequire(this);
         return res;
     }
-    unrequire(id:string|NodeModule, callerModule?:NodeModule, invalidateCache?:boolean) {
+    unrequire(id:string|NodeModule, callerModule?:NodeModule) {
         if (typeof id == "string") {
             if (!callerModule) {
                 callerModule = this.getCallerModule();
@@ -49,9 +50,6 @@ export class CustomRequire {
         }
         if (this.attachedModules.indexOf(id) > -1) {
             var list = id.__removeCustomRequire(this);
-            if (invalidateCache) {
-                id.__invalidateCache();
-            }
             if (this.unrequirecallback) {
                 this.unrequirecallback(list);
             }
@@ -85,6 +83,22 @@ export class CustomRequire {
 if (!Module.__customCache) {
     Module.__customCache = {};
     Module.prototype.__require = Module.prototype.require;
+}
+Module.prototype.__invalidate = function(list?:NodeModule[]) {
+    if (this.__invalid) {
+        return;
+    }
+    if (!list) {
+        list = [];
+    }
+    list.push(this);
+    this.__invalid = true;
+    if (this.__customRequires.length == 0) {
+        for (let parentModule of this.__parentModules) {
+            parentModule.__invalidate(list);
+        }
+    }
+    return list;
 }
 Module.prototype.__cleanCalled = function(customRequire:CustomRequire, mod:NodeModule, cyclicCheck?:NodeModule[]) {
     if (!cyclicCheck) {

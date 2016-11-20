@@ -17,14 +17,14 @@ var CustomRequire = (function () {
         }
         var cachedModule = this.getCachedModule(id, callerModule);
         if (cachedModule && cachedModule.__checkInvalid()) {
-            this.unrequire(cachedModule, null, true);
+            cachedModule.__invalidate();
         }
         var res = callerModule.require(id);
         cachedModule = this.getCachedModule(id, callerModule);
         cachedModule.__addCustomRequire(this);
         return res;
     };
-    CustomRequire.prototype.unrequire = function (id, callerModule, invalidateCache) {
+    CustomRequire.prototype.unrequire = function (id, callerModule) {
         if (typeof id == "string") {
             if (!callerModule) {
                 callerModule = this.getCallerModule();
@@ -33,9 +33,6 @@ var CustomRequire = (function () {
         }
         if (this.attachedModules.indexOf(id) > -1) {
             var list = id.__removeCustomRequire(this);
-            if (invalidateCache) {
-                id.__invalidateCache();
-            }
             if (this.unrequirecallback) {
                 this.unrequirecallback(list);
             }
@@ -72,6 +69,23 @@ if (!Module.__customCache) {
     Module.__customCache = {};
     Module.prototype.__require = Module.prototype.require;
 }
+Module.prototype.__invalidate = function (list) {
+    if (this.__invalid) {
+        return;
+    }
+    if (!list) {
+        list = [];
+    }
+    list.push(this);
+    this.__invalid = true;
+    if (this.__customRequires.length == 0) {
+        for (var _i = 0, _a = this.__parentModules; _i < _a.length; _i++) {
+            var parentModule = _a[_i];
+            parentModule.__invalidate(list);
+        }
+    }
+    return list;
+};
 Module.prototype.__cleanCalled = function (customRequire, mod, cyclicCheck) {
     if (!cyclicCheck) {
         cyclicCheck = [];
