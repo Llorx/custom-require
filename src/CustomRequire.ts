@@ -192,7 +192,7 @@ Module.prototype.__invalidateCache = function(cyclicCheck?:NodeModule[]) {
     cyclicCheck.push(this);
     if (this.__customRequires.length == 0) {
         for (let childModule of this.__childModules) {
-            if (cyclicCheck.indexOf(childModule) < 0) {
+            if (cyclicCheck.indexOf(childModule) < 0 && childModule.__customRequires.length == 0) {
                 childModule.__invalidateCache(cyclicCheck);
             }
         }

@@ -187,7 +187,7 @@ Module.prototype.__invalidateCache = function (cyclicCheck) {
     if (this.__customRequires.length == 0) {
         for (var _i = 0, _a = this.__childModules; _i < _a.length; _i++) {
             var childModule = _a[_i];
-            if (cyclicCheck.indexOf(childModule) < 0) {
+            if (cyclicCheck.indexOf(childModule) < 0 && childModule.__customRequires.length == 0) {
                 childModule.__invalidateCache(cyclicCheck);
             }
         }
