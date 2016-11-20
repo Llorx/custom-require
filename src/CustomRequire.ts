@@ -82,8 +82,10 @@ export class CustomRequire {
     }
 }
 
-Module.__customCache = {};
-Module.prototype.__require = Module.prototype.require;
+if (!Module.__customCache) {
+    Module.__customCache = {};
+    Module.prototype.__require = Module.prototype.require;
+}
 Module.prototype.__cleanCalled = function(customRequire:CustomRequire, mod:NodeModule, cyclicCheck?:NodeModule[]) {
     if (!cyclicCheck) {
         cyclicCheck = [];
@@ -173,7 +175,6 @@ Module.prototype.__checkInvalid = function(cyclicCheck?:NodeModule[]) {
     if (this.__invalid) {
         return true;
     }
-    this.__invalid = true;
     for (let childModule of this.__childModules) {
         if (cyclicCheck.indexOf(childModule) < 0) {
             if (childModule.__checkInvalid(cyclicCheck)) {

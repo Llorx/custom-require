@@ -68,8 +68,10 @@ var CustomRequire = (function () {
     return CustomRequire;
 }());
 exports.CustomRequire = CustomRequire;
-Module.__customCache = {};
-Module.prototype.__require = Module.prototype.require;
+if (!Module.__customCache) {
+    Module.__customCache = {};
+    Module.prototype.__require = Module.prototype.require;
+}
 Module.prototype.__cleanCalled = function (customRequire, mod, cyclicCheck) {
     if (!cyclicCheck) {
         cyclicCheck = [];
@@ -166,7 +168,6 @@ Module.prototype.__checkInvalid = function (cyclicCheck) {
     if (this.__invalid) {
         return true;
     }
-    this.__invalid = true;
     for (var _i = 0, _a = this.__childModules; _i < _a.length; _i++) {
         var childModule = _a[_i];
         if (cyclicCheck.indexOf(childModule) < 0) {
