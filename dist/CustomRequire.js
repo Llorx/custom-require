@@ -222,7 +222,9 @@ Module.prototype.__callParentRequires = function (mod, cyclicCheck) {
     cyclicCheck.push(this);
     for (var _i = 0, _a = this.__parentModules; _i < _a.length; _i++) {
         var parentModule = _a[_i];
-        parentModule.__callParentRequires(mod, cyclicCheck);
+        if (cyclicCheck.indexOf(parentModule) < 0) {
+            parentModule.__callParentRequires(mod, cyclicCheck);
+        }
     }
 };
 Module.prototype.require = function (path) {
